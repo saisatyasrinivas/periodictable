@@ -8,16 +8,25 @@ CORS(app)
 
 g = rdflib.Graph()
 g.parse("Periodictable.owl")
-print(str(g))
-
-@app.route('/periodictable/standard_states/', methods=['GET'])
-def standard_states():
-    
-    return jsonify({"options":["a","b","c","d"]})
 
 @app.route('/periodictable/classifications/', methods=['GET'])
 def classifications():
-    return jsonify({"options":["1","2","3","4"]})
+    qres = g.query("""
+                  PREFIX table:<http://www.daml.org/2003/01/periodictable/PeriodicTable#>
+                  PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                  SELECT (?c as ?options)
+                  {
+                      ?c rdf:type table:Classification.
+                  }
+    """)
+    values = ['Select a value']
+    for row in qres:
+        values.append(row.options.split('#')[-1])
+    return jsonify({"options":values})
+
+@app.route('/periodictable/standard_states/', methods=['GET'])
+def standard_states():
+    return jsonify({"options":["a","b","c","d"]})
 
 @app.route('/periodictable/blocks/', methods=['GET'])
 def blocks():
