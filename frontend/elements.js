@@ -25,7 +25,7 @@ $(document).ready(function(){
                                     url: url3,
                                     type: 'GET',
                                     success: function(response){
-                                        insert_html(response,'group');
+                                        insert_html(response,'group', true);
                                         $.ajax({
                                             url: url4,
                                             type: 'GET',
@@ -94,11 +94,27 @@ function change_html(id){
 
 }
 
-function insert_html(response, id){
+$('#element_list').on('click', 'li', function(e){
+    let element = e.target.innerText;
+    $.ajax({
+        url: 'http://localhost:5000/periodictable/element/'+element,
+        type : 'GET',
+        success : function(response){
+            let options = response.options;
+            $('#element_details').html(options);
+        }
+    })
+})
+
+function insert_html(response, id, group){
     let options = response.options;
     let htmlCode = "";
     for(let i of options){
-        htmlCode += `<option value="${i}">${i}</option>`
+        let value = i;
+        if(group){
+            value = i.replace( /\D/g, '');
+        }
+        htmlCode += `<option value="${value}">${i}</option>`
     }
     $(`#${id}`).html(htmlCode);
 }
