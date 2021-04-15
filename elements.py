@@ -81,27 +81,27 @@ def periods():
     return jsonify({"options":values})
 
 @app.route('/periodictable/classification/<string:clss>', methods=['GET'])
-def classification():
+def classification(clss):
     return jsonify({"options":["1"]})
 
 
 @app.route('/periodictable/standard_state/<string:state>', methods=['GET'])
-def standard_state():
-    return jsonify({"options":["1"]})
+def standard_state(state):
+    return jsonify({"options":["2"]})
 
 
 @app.route('/periodictable/block/<string:blk>', methods=['GET'])
-def block():
+def block(blk):
     return jsonify({"options":["1"]})
 
 
 @app.route('/periodictable/group/<int:gnum>', methods=['GET'])
-def group():
+def group(gnum):
     return jsonify({"options":["1"]})
 
 
 @app.route('/periodictable/period/<int:pnum>', methods=['GET'])
-def period():
+def period(pnum):
     return jsonify({"options":["1"]})
 
 def get_results(category):
