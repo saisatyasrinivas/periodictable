@@ -11,35 +11,26 @@ CORS(app)
 
 @app.route('/periodictable/classifications/', methods=['GET'])
 def classifications():
-    print('pid:', os.getpid())
-    print('thread id:', td.get_ident())
     qres = get_results('Classification')
     values = ['Select a value']
     for row in qres:
         values.append(row.options.split('#')[-1])
-    print(values)
     return jsonify({"options":values})
 
 @app.route('/periodictable/standard_states/', methods=['GET'])
 def standard_states():
-    print('pid:', os.getpid())
-    print('thread id:', td.get_ident())
     qres = get_results('StandardState')
     values = ['Select a value']
     for row in qres:
         values.append(row.options.split('#')[-1])
-    print(values)
     return jsonify({"options":values})
 
 @app.route('/periodictable/blocks/', methods=['GET'])
 def blocks():
-    print('pid:', os.getpid())
-    print('thread id:', td.get_ident())
     qres = get_results('Block')
     values = ['Select a value']
     for row in qres:
         values.append(row.options.split('#')[-1])
-    print(values)
     return jsonify({"options":values})
 
 @app.route('/periodictable/groups/', methods=['GET'])
@@ -50,15 +41,18 @@ def groups():
     """
     PREFIX table:<http://www.daml.org/2003/01/periodictable/PeriodicTable#>
     PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-    SELECT (?n as ?NAME)
+    SELECT (?n as ?NAME) ?group_name
     { 
     ?c rdf:type table:Group.
     ?c table:number ?n.
+    OPTIONAL {?c table:name ?group_name.}
     }""")
     values = ['Select a value']
     for row in qres:
-        values.append(row.NAME)
-    print(values)
+        to_append = row.NAME
+        if row.group_name:
+            to_append = '{} ({})'.format(to_append,row.group_name)
+        values.append(to_append)
     return jsonify({"options":values})
 
 @app.route('/periodictable/periods/', methods=['GET'])
@@ -77,14 +71,12 @@ def periods():
     values = ['Select a value']
     for row in qres:
         values.append(row.NAME)
-    print(values)
     return jsonify({"options":values})
 
 @app.route('/periodictable/classification/<string:clss>', methods=['GET'])
 def classification(clss):
     g = rdflib.Graph()
     g.parse("Periodictable.owl")
-    print("graph has %s statements." % len(g))
 
     qres = g.query(
     """
@@ -97,36 +89,94 @@ def classification(clss):
     values = []
     for row in qres:
         values.append(row.NAME)
-    print(values)
     return jsonify({"options":values})
 
 
 
 @app.route('/periodictable/standard_state/<string:state>', methods=['GET'])
 def standard_state(state):
-    return jsonify({"options":["2"]})
+    g = rdflib.Graph()
+    g.parse("Periodictable.owl")
+
+    qres = g.query(
+    """
+    PREFIX table:<http://www.daml.org/2003/01/periodictable/PeriodicTable#>
+    SELECT (?n as ?NAME)
+    {{
+    ?c table:standardState table:{}.
+    ?c table:name ?n.
+    }}""".format(state))
+    values = []
+    for row in qres:
+        values.append(row.NAME)
+    return jsonify({"options":values})
 
 
 @app.route('/periodictable/block/<string:blk>', methods=['GET'])
 def block(blk):
-    return jsonify({"options":["1"]})
+    g = rdflib.Graph()
+    g.parse("Periodictable.owl")
+
+    qres = g.query(
+    """
+    PREFIX table:<http://www.daml.org/2003/01/periodictable/PeriodicTable#>
+    SELECT (?n as ?NAME)
+    {{
+    ?c table:block table:{}.
+    ?c table:name ?n.
+    }}""".format(blk))
+    values = []
+    for row in qres:
+        values.append(row.NAME)
+    return jsonify({"options":values})
 
 
 @app.route('/periodictable/group/<int:gnum>', methods=['GET'])
 def group(gnum):
-    return jsonify({"options":["1"]})
+    g = rdflib.Graph()
+    g.parse("Periodictable.owl")
+
+    qres = g.query(
+    """
+    PREFIX table:<http://www.daml.org/2003/01/periodictable/PeriodicTable#>
+    PREFIX xsd:<http://www.w3.org/2001/XMLSchema#>
+    SELECT (?n as ?NAME)
+    {{
+        ?c table:number "{}"^^xsd:integer.
+        ?c table:element ?e.
+        ?e table:name ?n.
+    }}""".format(gnum))
+    values = []
+    for row in qres:
+        values.append(row.NAME)
+    return jsonify({"options":values})
 
 
 @app.route('/periodictable/period/<int:pnum>', methods=['GET'])
 def period(pnum):
-    return jsonify({"options":["1"]})
+    g = rdflib.Graph()
+    g.parse("Periodictable.owl")
+
+    qres = g.query(
+    """
+    PREFIX table:<http://www.daml.org/2003/01/periodictable/PeriodicTable#>
+    PREFIX xsd:<http://www.w3.org/2001/XMLSchema#>
+    SELECT (?n as ?NAME)
+    {{
+        ?c table:number "{}"^^xsd:integer.
+        ?c table:element ?e.
+        ?e table:name ?n.
+    }}""".format(pnum))
+    values = []
+    for row in qres:
+        values.append(row.NAME)
+    return jsonify({"options":values})
 
 
 @app.route('/periodictable/element/<string:sym>', methods=['GET'])
 def element(sym):
     g = rdflib.Graph()
     g.parse("Periodictable.owl")
-    print("graph has %s statements." % len(g))
 
     qres = g.query(
     """
@@ -168,9 +218,6 @@ def element(sym):
 
 
 def get_results(category):
-    print("*"*40)
-    print(category)
-    print("*"*40)
     g = rdflib.Graph()
     g.parse("Periodictable.owl")
     query_string = """
@@ -181,9 +228,6 @@ def get_results(category):
                       ?c rdf:type table:{}.
                   }}
     """.format(category)
-    print("*"*40)
-    print(query_string)
-    print("*"*40)
     qres = g.query(query_string)
     return qres
 
