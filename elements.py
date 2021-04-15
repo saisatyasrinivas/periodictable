@@ -82,7 +82,24 @@ def periods():
 
 @app.route('/periodictable/classification/<string:clss>', methods=['GET'])
 def classification(clss):
-    return jsonify({"options":["1"]})
+    g = rdflib.Graph()
+    g.parse("Periodictable.owl")
+    print("graph has %s statements." % len(g))
+
+    qres = g.query(
+    """
+    PREFIX table:<http://www.daml.org/2003/01/periodictable/PeriodicTable#>
+    SELECT (?n as ?NAME)
+    {{
+    ?c table:classification table:{}.
+    ?c table:name ?n.
+    }}""".format(clss))
+    values = []
+    for row in qres:
+        values.append(row.NAME)
+    print(values)
+    return jsonify({"options":values})
+
 
 
 @app.route('/periodictable/standard_state/<string:state>', methods=['GET'])
@@ -103,6 +120,52 @@ def group(gnum):
 @app.route('/periodictable/period/<int:pnum>', methods=['GET'])
 def period(pnum):
     return jsonify({"options":["1"]})
+
+
+@app.route('/periodictable/element/<string:sym>', methods=['GET'])
+def element(sym):
+    g = rdflib.Graph()
+    g.parse("Periodictable.owl")
+    print("graph has %s statements." % len(g))
+
+    qres = g.query(
+    """
+    PREFIX table:<http://www.daml.org/2003/01/periodictable/PeriodicTable#>
+    PREFIX xsd:<http://www.w3.org/2001/XMLSchema#>
+    SELECT ?symbol ?atomicNumber ?atomicWeight ?group ?period ?block ?standardState ?color ?classification ?casRegistryID ?group_name
+    {{
+    ?n   table:name  "{}"^^xsd:string.
+    ?n  table:symbol ?symbol.
+    ?n  table:atomicNumber ?atomicNumber.
+    ?n table:atomicWeight ?atomicWeight.
+    ?n table:group       ?group.
+    ?n table:period ?period.
+    ?n table:block ?block.
+    ?n table:standardState ?standardState.
+    ?n table:color ?color.
+    ?n table:classification ?classification.
+    ?n table:casRegistryID ?casRegistryID.
+    OPTIONAL {{?group table:name ?group_name.}}
+    }}""".format(sym))
+
+    values = {}
+    for row in qres:
+        values['symbol']= row.symbol
+        values['AtomicNumber'] = row.atomicNumber
+        values['AtomicWeight'] = row.atomicWeight
+        group_name = row.group.split('#')[-1]
+        if row.group_name:
+            group_name += "({})".format(row.group_name)
+        values['GroupName'] = group_name
+        values['Period'] = row.period.split('#')[-1]
+        values['Block'] = row.block.split('#')[-1]
+        values['StandardState'] = row.standardState.split('#')[-1]
+        values['color'] = row.color
+        values['classification'] = row.classification.split('#')[-1]
+        values['casRegistryID'] = row.casRegistryID
+    return jsonify({"options":values})
+
+
 
 def get_results(category):
     print("*"*40)
