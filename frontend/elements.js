@@ -49,12 +49,49 @@ $(document).ready(function(){
     },3000)
 })
 $(`#classification`).change(function(){
-    let text = $(`#classification`).val();
-    console.log(text);
+    change_html('#classification');
+})
+$(`#standardState`).change(function(){
+    change_html('#standardState');
+})
+$(`#block`).change(function(){
+    change_html('#block');
+})
+$(`#group`).change(function(){
+    change_html('#group');
+})
+$(`#period`).change(function(){
+    change_html('#period');
 })
 
 function change_html(id){
-    console.log($(`${id} option:selected`).text());
+    let text = $(id).val();
+    let urls = {
+        '#classification': 'http://localhost:5000/periodictable/classification/',
+        '#standardState': 'http://localhost:5000/periodictable/standard_state/',
+        '#block': 'http://localhost:5000/periodictable/block/',
+        '#group': 'http://localhost:5000/periodictable/group/',
+        '#period': 'http://localhost:5000/periodictable/period/'
+    };
+    console.log(text);
+    if(text && text !== 'Select a value'){
+        
+        $.ajax({
+            url: urls[id]+text,
+            type: 'GET',
+            success: function(response){
+                let options = response.options;
+                let htmlCode = ""
+                for(let i of options){
+    
+                    htmlCode += `<li>${i}</li>`
+                }
+                htmlCode = `<ul>${htmlCode}</ul>`
+                $(`#element_list`).html(htmlCode);
+            }
+        })
+    }
+
 }
 
 function insert_html(response, id){
