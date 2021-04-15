@@ -86,22 +86,22 @@ def classification():
 
 
 @app.route('/periodictable/standard_state/<string:state>', methods=['GET'])
-def classification():
+def standard_state():
     return jsonify({"options":["1"]})
 
 
 @app.route('/periodictable/block/<string:blk>', methods=['GET'])
-def classification():
+def block():
     return jsonify({"options":["1"]})
 
 
 @app.route('/periodictable/group/<int:gnum>', methods=['GET'])
-def classification():
+def group():
     return jsonify({"options":["1"]})
 
 
 @app.route('/periodictable/period/<int:pnum>', methods=['GET'])
-def classification():
+def period():
     return jsonify({"options":["1"]})
 
 def get_results(category):
