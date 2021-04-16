@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 import rdflib
 import os
@@ -213,6 +213,43 @@ def element(sym):
         values['color'] = row.color
         values['classification'] = row.classification.split('#')[-1]
         values['casRegistryID'] = row.casRegistryID
+    return jsonify({"options":values})
+
+
+@app.route('/periodictable/multiSelect/', methods=["POST"])
+def multiSelect():
+    data = dict(request.form)
+    print(data)
+    where_condition = ""
+    if '#classification' in data:
+        where_condition += "?c table:classification table:{}.".format(data["#classification"])
+    if '#standardState' in data:
+        where_condition += "?c table:standardState table:{}.".format(data["#standardState"])
+    if '#block' in data:
+        where_condition += "?c table:block table:{}.".format(data["#block"])
+    if '#group' in data:
+        where_condition += """?groupNum table:number "{}"^^xsd:integer.
+                        ?groupNum table:element ?c.""".format(data["#group"])
+    if '#period' in data:
+        where_condition += """?periodNum table:number "{}"^^xsd:integer.
+                                ?periodNum table:element ?c.""".format(data["#period"])
+
+    g = rdflib.Graph()
+    g.parse("Periodictable.owl")
+    print("graph has %s statements." % len(g))
+    query =  """
+    PREFIX table:<http://www.daml.org/2003/01/periodictable/PeriodicTable#>
+    PREFIX xsd:<http://www.w3.org/2001/XMLSchema#>
+    SELECT (?n as ?NAME)
+    {{
+        {}
+         ?c table:name ?n.
+    }}""".format(where_condition)
+    print(query)
+    qres = g.query(query)
+    values = []
+    for row in qres:
+        values.append(row.NAME)
     return jsonify({"options":values})
 
 
