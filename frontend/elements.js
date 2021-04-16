@@ -48,21 +48,72 @@ $(document).ready(function(){
         })
     },3000)
 })
-$(`#classification`).change(function(){
-    change_html('#classification');
+// $(`#classification`).change(function(){
+//     change_html('#classification');
+// })
+// $(`#standardState`).change(function(){
+//     change_html('#standardState');
+// })
+// $(`#block`).change(function(){
+//     change_html('#block');
+// })
+// $(`#group`).change(function(){
+//     change_html('#group');
+// })
+// $(`#period`).change(function(){
+//     change_html('#period');
+// })
+
+$('.join').change(function(){
+    let join1 = $(`#classification`).val();
+    let join2 = $(`#standardState`).val();
+    let join3  = $(`#block`).val();
+    let join4 = $(`#group`).val();
+    let join5 = $(`#period`).val();
+    let selectedOptions = {}
+    if(!(join1 === "Select a value" || !join1)){
+        selectedOptions["#classification"] = join1;
+    }
+    if(!(join2 === "Select a value" || !join2)){
+        selectedOptions["#standardState"] = join2;
+    }
+    if(!(join3 === "Select a value" || !join3)){
+        selectedOptions["#block"] = join3;
+    }
+    if(!(join4 === "Select a value" || !join4)){
+        selectedOptions["#group"] = join4;
+    }
+    if(!(join5 === "Select a value" || !join5)){
+        selectedOptions["#period"] = join5;
+    }
+    let selectedKeys = Object.keys(selectedOptions);
+    if(selectedKeys.length === 1){
+        change_html(selectedKeys[0]);
+    }
+    else{
+        console.log(selectedKeys);
+        get_html(selectedOptions);
+    }
 })
-$(`#standardState`).change(function(){
-    change_html('#standardState');
-})
-$(`#block`).change(function(){
-    change_html('#block');
-})
-$(`#group`).change(function(){
-    change_html('#group');
-})
-$(`#period`).change(function(){
-    change_html('#period');
-})
+
+function get_html(jsonData){
+    $.ajax({
+        url: "http://localhost:5000/periodictable/multiSelect/",
+        type: 'POST',
+        data: jsonData,
+        dataType: "json",
+        success: function(response){
+            let options = response.options;
+            let htmlCode = ""
+            for(let i of options){
+
+                htmlCode += `<li>${i}</li>`
+            }
+            htmlCode = `<ul>${htmlCode}</ul>`
+            $(`#element_list`).html(htmlCode);
+        }
+    })
+}
 
 function change_html(id){
     let text = $(id).val();
@@ -101,7 +152,7 @@ $('#element_list').on('click', 'li', function(e){
         type : 'GET',
         success : function(response){
             let options = response.options;
-            $('#element_details').html(options);
+            $('#element_details').html(`<p>${JSON.stringify(options)}</p>`);
         }
     })
 })
